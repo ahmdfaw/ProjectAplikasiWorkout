@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "752365044321",
+    "project_id": "project-aplikasi-d5711",
+    "storage_bucket": "project-aplikasi-d5711.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:752365044321:android:85eb68a95a61ba54bb6020",
+        "android_client_info": {
+          "package_name": "com.example.projectaplikasi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxFvWVUpe5yTRa9d19DK23GbvRm4h1O5g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
