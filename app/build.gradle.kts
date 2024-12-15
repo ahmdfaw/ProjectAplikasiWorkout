@@ -56,7 +56,7 @@ dependencies {
     implementation ("com.google.android.gms:play-services-maps:18.1.0")
     implementation ("com.google.android.gms:play-services-location:18.0.0")  // Pastikan ada dependensi ini!
     implementation ("com.google.maps:google-maps-services:0.17.0")
-    implementation ("com.google.android.libraries.places:places:3.1.0")
+    implementation ("com.google.android.libraries.places:places:3.2.0")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
