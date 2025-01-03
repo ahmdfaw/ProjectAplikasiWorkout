@@ -24,6 +24,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -39,6 +40,7 @@ import com.google.android.libraries.places.widget.listener.PlaceSelectionListene
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private var mGoogleMap: GoogleMap? = null
     private lateinit var autocompleteFragment: AutocompleteSupportFragment
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
@@ -63,54 +65,31 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
-        Places.initialize(applicationContext,getString(R.string.google_maps_api_key))
-        autocompleteFragment = supportFragmentManager.findFragmentById(R.id.autocomplete_fragment)
-                as AutocompleteSupportFragment
-        autocompleteFragment.setPlaceFields(listOf(Place.Field.ID, Place.Field.ADDRESS, Place.Field.LAT_LNG))
-        autocompleteFragment.setOnPlaceSelectedListener(object :PlaceSelectionListener{
-            override fun onError(status: Status) {
-                Toast.makeText(this@MapActivity, "Error: ${status.statusMessage}", Toast.LENGTH_SHORT).show()
-                // Log error untuk debug lebih lanjut
-                Log.e("AutocompleteError", "Error: ${status.statusMessage}")
-            }
-            override fun onPlaceSelected(place: Place) {
-                val add = place.address
-                val id = place.id
-                val latLng = place.latLng!!
-                val marker = addMarker(latLng)
-                marker.title = "$add"
-                marker.snippet = "$id"
-                zoomOnMap(latLng)
-            }
-
-        })
-
-
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.mapFragment) as SupportMapFragment
+        val mapFragment =
+            supportFragmentManager.findFragmentById(R.id.mapFragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        val mapOptionsButton:ImageButton = findViewById(R.id.mapOptionsMenu)
-        val popupMenu = PopupMenu(this,mapOptionsButton)
-        popupMenu.menuInflater.inflate(R.menu.map_option,popupMenu.menu)
+        val mapOptionsButton: ImageButton = findViewById(R.id.mapOptionsMenu)
+        val popupMenu = PopupMenu(this, mapOptionsButton)
+        popupMenu.menuInflater.inflate(R.menu.map_option, popupMenu.menu)
         popupMenu.setOnMenuItemClickListener { menuItem ->
             changeMap(menuItem.itemId)
             true
         }
 
-        mapOptionsButton.setOnClickListener{
+        mapOptionsButton.setOnClickListener {
             popupMenu.show()
         }
 
     }
 
-    private fun zoomOnMap(latLng: LatLng){
-        val newLatLngZoom = CameraUpdateFactory.newLatLngZoom(latLng, 12f)
-        mGoogleMap?.animateCamera(newLatLngZoom)
-    }
 
     private fun changeMap(itemId: Int) {
-        when(itemId){
+        if (mGoogleMap == null) {
+            Toast.makeText(this, "Map belum siap!", Toast.LENGTH_SHORT).show()
+            return
+        }
+        when (itemId) {
             R.id.normal_map -> mGoogleMap?.mapType = GoogleMap.MAP_TYPE_NORMAL
             R.id.hybrid_map -> mGoogleMap?.mapType = GoogleMap.MAP_TYPE_HYBRID
             R.id.satellite_map -> mGoogleMap?.mapType = GoogleMap.MAP_TYPE_SATELLITE
@@ -121,51 +100,33 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mGoogleMap = googleMap
-
-        addMarker(LatLng(13.123,12.123))
-
-        addDraggableMarker(LatLng(12.456, 14.765))
-
-        addCustomMarker(R.drawable.flag_marker, LatLng(13.999,12.456))
-
-        mGoogleMap?.setOnMapClickListener {
-            mGoogleMap?.clear()
-            addMarker(it)
-        }
-
-        mGoogleMap?.setOnMapLongClickListener { position ->
-            addCustomMarker(R.drawable.flag_marker,position)
-        }
-
-        mGoogleMap?.setOnMarkerClickListener {marker ->
-            marker.remove()
-            false
-        }
-
-    }
-
-    private fun addMarker(position: LatLng): Marker {
-        val marker = mGoogleMap?.addMarker(MarkerOptions()
-            .position(position)
-            .title("Marker")
+        // Add a marker in Yogyakarta, Indonesia,
+        // and move the map's camera to the same location.
+        val locations = listOf(
+            LatLng(-7.825532608462961, 110.37591526858363) to "Tritunggal Fitnes Gym Jogja",
+            LatLng(-7.8246787802836435, 110.37490677615236) to "TT gym jogja",
+            LatLng(-7.824649732302928, 110.37473987211794) to "Tritunggal Fitness Center",
+            LatLng(-7.821008650064526, 110.37326765654625) to "Glanzfit",
+            LatLng(-7.821987729657657, 110.3682827386413) to "Wzone Gym Studio",
+            LatLng(-7.822278451763605, 110.36736410447067) to "OCIGEN Physical Fitness Center",
+            LatLng(-7.824978147637174, 110.36078229924631) to "COPRAZZ GYM",
+            LatLng(-7.816574053162959, 110.35944197881214) to "DM GYM",
+            LatLng(-7.8105066842831725, 110.3547467374956) to "Joglo Camp",
+            LatLng(-7.797562669531342, 110.37607946449617) to "DR GYM"
         )
 
-        return marker!!
-    }
+        // Builder untuk LatLngBounds
+        val boundsBuilder = LatLngBounds.Builder()
 
-    private fun addDraggableMarker(position: LatLng){
-        mGoogleMap?.addMarker(MarkerOptions()
-            .position(position)
-            .title("Draggable Marker")
-            .draggable(true)
-        )
-    }
+        // Tambahkan marker untuk setiap lokasi
+        for ((latLng, title) in locations) {
+            googleMap.addMarker(MarkerOptions().position(latLng).title(title))
+            boundsBuilder.include(latLng) // Tambahkan lokasi ke bounds
+        }
 
-    private fun addCustomMarker(icon: Int, position: LatLng){
-        mGoogleMap?.addMarker(MarkerOptions()
-            .position(position)
-            .title("Custom Marker")
-            .icon(BitmapDescriptorFactory.fromResource(icon))
-        )
+        // Pindahkan kamera untuk mencakup semua lokasi
+        val bounds = boundsBuilder.build()
+        val padding = 200 // Padding dalam piksel
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
     }
 }
